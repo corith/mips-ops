@@ -14,15 +14,15 @@ def decode_instruction(instruction):
         # else:
         # print(bit)
         if bit == 0:
-            print(decode_instr[bit:bit + 6])
+            print(decode_instr[0:6])
         elif bit == 1:
-            print(decode_instr[bit+5:11])
+            print(decode_instr[6:11])
         elif bit == 2:
-            print(decode_instr[bit+9:16])
+            print(decode_instr[11:16])
         elif bit == 3:
-            print(decode_instr[bit+13:21])
+            print(decode_instr[16:21])
         elif bit == 4:
-            print(decode_instr[bit + 17:26])
+            print(decode_instr[21:26])
         else:
             print(decode_instr[26:32])
         # print(decode_instr[12:17])
