@@ -1,0 +1,146 @@
+Brief Summary of Modifications:
+
+I added forwarding from the MEM ALU and LW stages of the pipeline.
+I check to see if the destination register of an instruction in the mem or wb stage
+is equal to the source register of an instruction in the decode stage and that it is
+safe to bypass (the instruction being forwarded is complete).
+
+Brief Summary of Experiments:
+
+I ran the code without forwarding and then with the forwarding implemented and checked the
+MEM/WB.value of each run. The results are below.
+
+Without Forwarding:
+     MEM/WB.value = xxxxxxxx
+	 MEM/WB.value = xxxxxxxx
+	 MEM/WB.value = 00000000
+	 MEM/WB.value = 00000003
+	 MEM/WB.value = 00000000
+	 MEM/WB.value = 00000000
+	 MEM/WB.value = 00000003
+	 MEM/WB.value = 00000011
+	 MEM/WB.value = 00000011
+	 MEM/WB.value = 00000006
+	 MEM/WB.value = fffffffe
+	 MEM/WB.value = 00000000
+	 MEM/WB.value = 0000000c
+	 MEM/WB.value = 00000000
+	 MEM/WB.value = 00000000
+
+With Forwading
+     MEM/WB.value = xxxxxxxx
+	 MEM/WB.value = xxxxxxxx
+	 MEM/WB.value = 00000000
+	 MEM/WB.value = 00000003
+	 MEM/WB.value = ffffffff
+	 MEM/WB.value = ffffffff
+	 MEM/WB.value = ffffffff
+	 MEM/WB.value = 00000011
+	 MEM/WB.value = 00000011
+	 MEM/WB.value = 00000011
+	 MEM/WB.value = fffffffe
+	 MEM/WB.value = 00000000
+	 MEM/WB.value = ffffffff
+	 MEM/WB.value = 00000000
+	 MEM/WB.value = 00000000
+
+
+How Are The Hazards Affected by The Forwarding?
+
+- They are able to go through the pipeline in less cycles than with no forwarding
+becasue nops do not need to be inserted, except for the one after the LW and before
+the last add. This is because forwarding cannot solve all data hazards and so a nop
+is still required here. The difference is shown in the output of the previous question.
+You will see that in the unforwarded pipeline correct values are over written. This could
+be fixed with nops if the pipeline does not have forwarding hardware. Ideally, we handle
+this with forwarding like we did for this assignment
+
+The Instructions:
+
+00412820
+    000000   // opcode = 00 = add $5 , $2 , $1
+    00010    // rs
+    00001    // rt
+    00101    // rd
+    00000    // shift
+    100000   // func = 20 = add
+
+8ca30004
+    100011   // opcode = 23 = lw $3 , 4($5)
+    00101    // rs
+    00011    // rt
+    00000    // immediate
+    00000    // immediate
+    000100   // immediate
+
+aca70005
+    101011   // opcode = 2b = sw $7, 5($5)
+    00101    // rs
+    00111    // rt
+    00000    // immediate
+    00000    // immediate
+    000101   // immediate
+
+00602020
+    000000   // opcode = 00 = add $4 , $3 , $0
+    00011    // rs
+    00000    // rt
+    00100    // rd
+    00000    // shift
+    100000   // func = 20 = add
+
+01093020
+    000000   // opcode = 00 = add $6, $8, $9
+    01000    // rs
+    01001    // rt
+    00110    // rd
+    00000    // shift
+    100000   // func = 20 = add
+
+ac06000c
+    101011   // opcode = 2b = sw $6, 12($0)
+    00000    // rs
+    00110    // rt
+    00000    // immediate
+    00000    // immediate
+    001100   // immediate
+
+00c05020
+    000000   // opcode = 00 = add $10, $6, $0
+    00110    // rs
+    00000    // rt
+    01010    // rd
+    00000    // shift
+    100000   // func = 20 = add
+
+8c0b0010
+    100011   // opcode = 23 = lw $11, 16($0),
+    00000    // rs
+    01011    // rt
+    00000    // immediate
+    00000    // immediate
+    010000   // immediate
+
+00000020
+    000000
+    00000
+    00000
+    00000
+    00000
+    100000
+
+002b6020
+    000000   // opcode = 00 = add $12, $1, $11
+    00001    // rs
+    01011    // rt
+    01100    // rd
+    00000    // shift
+    100000   // func = 20 = add
+
+
+-- THE DATA HAZARDS --
+$5 from add to lw
+$5 from add to sw
+$3 from lw to add
+$6 from add to sw
+$11 from lw to add
