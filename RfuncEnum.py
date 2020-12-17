@@ -1,0 +1,26 @@
+import enum
+
+
+class Rfuncs(enum.Enum):
+    add   = 0x20
+    addu  = 0x21
+    nd    = 0x24
+    div   = 0x1A
+    divu  = 0x1B
+    jr    = 0x08
+    mfhi  = 0x10
+    mthi  = 0x11
+    mflo  = 0x12
+    mtlo  = 0x13
+    mult  = 0x18
+    multu = 0x19
+    nor   = 0x27
+    xor   = 0x26
+    orr   = 0x25
+    slt   = 0x2A
+    sltu  = 0x2B
+    sll   = 0x00
+    srl   = 0x02
+    sra   = 0x03
+    sub   = 0x22
+    subu  = 0x23
