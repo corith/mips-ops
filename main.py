@@ -1,3 +1,6 @@
+import RfuncEnum
+
+
 def main():
     instruction = input("Enter your instruction in either binary or assembly format: ")
     decode_instruction(instruction)
@@ -22,4 +25,16 @@ def decode_instruction(instruction):
     print(decode_instr)
 
 
-main()
+# def get_op_code():
+def get_op_func(op_code, funcValue):
+    if op_code == 0x00:
+        for func in RfuncEnum.Rfuncs:
+            if hex(func.value) == hex(funcValue):
+                print(func.name)
+
+
+# main()
+get_op_func(0x00, 0x21)
+get_op_func(0x00, 0x24)
+get_op_func(0x00, 0x1A)
+get_op_func(0x00, 0x20)

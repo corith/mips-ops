@@ -1,0 +1,20 @@
+import enum
+
+class Iops(enum.Enum):
+    slti  = 0x0A
+    sltiu = 0xB
+    andi  = 0x0C
+    ori   = 0x0D
+    lui   = 0x0F
+    sw    = 0x2B
+    beq   = 0x04
+    bne   = 0x05
+    blez  = 0x06
+    bgtz  = 0x07
+    addiu = 0x08
+    lb    = 0x09
+    lw    = 0x23
+    lbu   = 0x24
+    lhu   = 0x25
+    sb    = 0x28
+    sh    = 0x29
