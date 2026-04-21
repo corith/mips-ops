@@ -1,11 +1,14 @@
 import RfuncEnum
+import IOpsEnum
 
 
 def main():
     instruction = input("Enter your instruction in either binary or assembly format: ")
     decode_instruction(instruction)
+    get_mips_instruction(instruction)
 
 
+# get the different sections of the instruction
 def decode_instruction(instruction):
     decode_instr = bin(int(instruction, 16))[2:]
     print("32 bit instruction")
@@ -22,19 +25,66 @@ def decode_instruction(instruction):
             print(decode_instr[21:26])
         else:
             print(decode_instr[26:32])
-    print(decode_instr)
+    # print(decode_instr)
+    print()
+    print()
 
 
-# def get_op_code():
-def get_op_func(op_code, funcValue):
-    if op_code == 0x00:
-        for func in RfuncEnum.Rfuncs:
-            if hex(func.value) == hex(funcValue):
-                print(func.name)
+# get the func code if the instruction is an R instruction
+def get_op_func(func_bits):
+    func_bits = int(func_bits, 2)
+    for func in RfuncEnum.Rfuncs:
+        if hex(func.value) == hex(func_bits):
+            print(func.name)
 
 
-# main()
-get_op_func(0x00, 0x21)
-get_op_func(0x00, 0x24)
-get_op_func(0x00, 0x1A)
-get_op_func(0x00, 0x20)
+def is_an_I_op(op_code):
+    # op_code = str(op_code)
+    # print(type(op_code))
+    print("op code from is an i op: ", end="")
+    print( hex(int(op_code , 2)))
+    for op in IOpsEnum.Iops:
+        if str(hex(int(op_code, 16))) == str(hex(op.value)):
+            return True
+        else:
+            return False
+
+
+def is_an_R_op(op_code):
+    op_code = int(op_code, 16)
+    for op in RfuncEnum.Rfuncs:
+        if op_code == hex(op.value):
+            return True
+        else:
+            return False
+
+
+def get_reg_rs(rs):
+    return int(rs)
+
+
+def get_reg_rt(rt):
+    return int(rt)
+
+
+def get_reg_rd(rd):
+    return int(rd)
+
+
+def get_mips_instruction(binary):
+    instr = 0
+    test = bin(int(binary, 16))[2:]
+    print(is_an_I_op(test[0:6]))
+    # if is_an_I_op(binary[0:8]):
+    if is_an_I_op(test[0:6]):
+        for op in IOpsEnum.Iops:
+            if hex(op.value) == hex(binary[0:6]):
+                instr = op.name
+    print("Assembly Code: ", end="")
+    print(instr)
+
+
+main()
+# print(is_an_I_op("0x2B"))
+get_op_func("100000")
+print(get_reg_rs(0b000101))
