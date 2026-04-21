@@ -6,7 +6,7 @@ This plan was authored in accordance with `/home/cory/code/ios/Silverback/.agent
 
 ## Purpose / Big Picture
 
-After this work, a user will be able to run one command to decode a single MIPS instruction word into its six bit fields and a canonical assembly string, and run one command to encode the same canonical assembly string back into machine code. The observable outcome is a small, reliable coursework tool: `python3 main.py decode 00412820` reports `add $5, $2, $1`, and `python3 main.py encode "sw $7, 5($5)"` reports `aca70005`.
+After this work, a user will be able to run one command to decode a single MIPS instruction word into its six bit fields and a canonical assembly string, and run one command to encode the same canonical assembly string back into machine code. The observable outcome is a small, reliable coursework tool: `python3 main.py decode 00412820` reports `add $5, $2, $1`, and `python3 main.py encode 'sw $7, 5($5)'` reports `aca70005`.
 
 This plan intentionally finishes the project that is already visible in the repository rather than expanding it into a simulator or full assembler. The repository currently points toward a single-instruction encoder/decoder, and the milestones below complete that path end to end.
 
@@ -14,10 +14,10 @@ This plan intentionally finishes the project that is already visible in the repo
 
 - [x] (2026-04-21 16:52Z) Read the repository, git history, and `/home/cory/code/ios/Silverback/.agent/PLANS.md` to infer the intended destination and planning format.
 - [x] (2026-04-21 16:52Z) Confirmed the current implementation is a prototype decoder with partial opcode tables and a dirty working tree in `main.py`.
-- [ ] Freeze the supported instruction subset and correct the opcode/funct tables so the data model is trustworthy.
-- [ ] Replace print-driven decode logic with pure parse/decode functions and golden tests based on the worked examples in `instructions.txt`.
-- [ ] Add the reverse assembly-to-machine encoder for the same subset and prove round-trip behavior with automated tests.
-- [ ] Replace the debug-heavy entrypoint with a clean CLI and update `README.md` so a new user can run the tool without reading the source.
+- [x] (2026-04-21 17:07Z) Froze the supported instruction subset as canonical single-instruction R-type and I-type encode/decode, corrected the opcode/funct tables, and moved the source of truth into `isa.py`.
+- [x] (2026-04-21 17:07Z) Replaced print-driven decode logic with pure bitfield normalization and `decode_word()` functions backed by automated golden tests from `instructions.txt`.
+- [x] (2026-04-21 17:07Z) Added `encode_assembly()` for the same supported subset and proved round-trip behavior across the golden corpus.
+- [x] (2026-04-21 17:07Z) Replaced the prototype entrypoint with an `argparse` CLI, documented real commands in `README.md`, and verified the full test suite passes.
 
 ## Surprises & Discoveries
 
@@ -35,6 +35,9 @@ This plan intentionally finishes the project that is already visible in the repo
 
 - Observation: the working tree is already dirty.
   Evidence: `git status --short` reports `M main.py`. Any implementation must preserve or consciously fold forward that change instead of discarding it.
+
+- Observation: assembly examples that include `$` must be shown with single quotes in shell transcripts or the shell will try to expand them before the program sees the registers.
+  Evidence: `python3 main.py encode "lw $11, 16($0)"` fails in the shell, while `python3 main.py encode 'lw $11, 16($0)'` succeeds and returns `8c0b0010`.
 
 ## Decision Log
 
@@ -54,9 +57,13 @@ This plan intentionally finishes the project that is already visible in the repo
   Rationale: the repo has no dependency or packaging setup, and the required work can be handled with `argparse`, `dataclasses`, `enum`, and `unittest`.
   Date/Author: 2026-04-21 / Codex
 
+- Decision: implement the full set of currently listed R-type and I-type mnemonics in the completed CLI rather than only the three golden examples.
+  Rationale: the additional operand layouts were still tractable, and finishing the full table-driven subset makes the project feel complete instead of demo-only.
+  Date/Author: 2026-04-21 / Codex
+
 ## Outcomes & Retrospective
 
-Initial planning outcome: the repository appears to be an unfinished coursework-oriented MIPS encoder/decoder. The missing pieces are a trustworthy instruction table, a structured decode model, the reverse encode path, automated tests, and a CLI contract that matches the prompts and README. No implementation work has been performed yet; this document exists to make the next implementation pass self-contained and restartable.
+Implementation outcome: the repository now contains a table-driven MIPS encoder/decoder for canonical single-instruction R-type and I-type operations. `main.py` is a thin CLI wrapper, the core logic lives in `bitfields.py`, `decoder.py`, `encoder.py`, `isa.py`, and `models.py`, and `README.md` documents runnable examples. The automated test suite covers bitfield normalization, golden decode cases, golden encode cases, round-trip behavior, and CLI output. The main remaining gap relative to a broader assembler is deliberate: J-type instructions, labels, pseudo-instructions, and symbolic register aliases are still out of scope.
 
 ## Context and Orientation
 
@@ -149,7 +156,7 @@ Once the CLI exists, the main acceptance commands should look like this:
     immediate: 0000000000000100 (4)
     assembly: lw $3, 4($5)
 
-    python3 main.py encode "sw $7, 5($5)"
+    python3 main.py encode 'sw $7, 5($5)'
     hex: aca70005
     binary: 10101100101001110000000000000101
 
@@ -162,7 +169,7 @@ If an instruction is outside the supported subset, the CLI must fail explicitly 
 
 Validation is complete only when the tool proves useful from both directions. Run `python3 -m unittest discover -s tests -v` and expect the golden decode tests, golden encode tests, round-trip tests, and CLI tests to pass. The most important named behaviors are: zero-padded normalization for R-type words, correct decode of the worked examples in `instructions.txt`, correct encode of the same examples, and clean rejection of malformed or unsupported inputs.
 
-Then run the CLI manually from `/home/cory/code/mips-ops`. `python3 main.py decode 00412820` must show the full six-field split and the canonical assembly `add $5, $2, $1`. `python3 main.py encode "add $12, $1, $11"` must produce `002b6020`. `python3 main.py decode 8c0b0010` must show `lw $11, 16($0)`. `python3 main.py encode "lw $11, 16($0)"` must produce `8c0b0010`. These manual checks matter because they verify both the machine-readable logic and the human-readable formatting.
+Then run the CLI manually from `/home/cory/code/mips-ops`. `python3 main.py decode 00412820` must show the full six-field split and the canonical assembly `add $5, $2, $1`. `python3 main.py encode 'add $12, $1, $11'` must produce `002b6020`. `python3 main.py decode 8c0b0010` must show `lw $11, 16($0)`. `python3 main.py encode 'lw $11, 16($0)'` must produce `8c0b0010`. These manual checks matter because they verify both the machine-readable logic and the human-readable formatting.
 
 The README is accepted only when a novice can follow it without opening the source. It must name the supported subset, name the unsupported features, and show at least one decode transcript and one encode transcript that match the real CLI output.
 
@@ -253,4 +260,4 @@ In `cli.py`, define:
 
     def main(argv: list[str] | None = None) -> int: ...
 
-Plan revision note: 2026-04-21. Initial ExecPlan created after repository reconnaissance and agent-assisted intent inference so the project can be completed as a self-contained, milestone-driven MVP.
+Plan revision note: 2026-04-21 17:07Z. Updated the plan after implementation to mark all milestones complete, record the shell-quoting discovery for `$` registers, and capture the actual delivered scope and validation results.
